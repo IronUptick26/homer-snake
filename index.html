@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Snake Game</title>
+    <style>
+        body { 
+            background-color: #191919; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            font-family: Arial; 
+            color: white;
+        }
+        canvas { 
+            border: 2px solid white; 
+        }
+        .banner {
+            position: absolute;
+            width: 1000px;
+            height: 200px;
+            object-fit: cover;
+        }
+        #topBanner { top: 0; }
+        #bottomBanner { bottom: 0; }
+        #scoreDisplay {
+            position: absolute;
+            top: 220px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <img id="topBanner" src="https://cdn.domestika.org/c_fill,dpr_auto,f_auto,q_auto,w_1200/v1713447975/blog-post-open-graph-covers/000/013/111/13111-original.jpg?1713447975" class="banner">
+    <img id="appleImg" src="https://www.clipartkey.com/mpngs/b/289-2893838_donut-png-clipart.png" style="display:none;">
+    <canvas id="gameCanvas" width="800" height="800"></canvas>
+    <div id="scoreDisplay">Score: 0</div>
+    <img id="bottomBanner" src="https://cdn.domestika.org/c_fill,dpr_auto,f_auto,q_auto,w_1200/v1713447975/blog-post-open-graph-covers/000/013/111/13111-original.jpg?1713447975" class="banner">
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const appleImg = document.getElementById('appleImg');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+
+        const gridSize = 40;
+        const tileCount = canvas.width / gridSize;
+
+        let snake = [
+            {x: 10, y: 10},
+            {x: 9, y: 10},
+            {x: 8, y: 10}
+        ];
+        let apple = getRandomApple();
+        let dx = 1;
+        let dy = 0;
+        let score = 0;
+
+        function getRandomApple() {
+            let newApple;
+            do {
+                newApple = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+            } while (snake.some(segment => 
+                segment.x === newApple.x && segment.y === newApple.y)
+            );
+            return newApple;
+        }
+
+        function drawGame() {
+            clearCanvas();
+            moveSnake();
+            drawSnake();
+            drawApple();
+            checkCollision();
+            scoreDisplay.textContent = `Score: ${score}`;
+            setTimeout(drawGame, 100);
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawSnake() {
+            snake.forEach((segment, index) => {
+                ctx.fillStyle = index === 0 ? 'green' : 'yellow';
+                ctx.fillRect(
+                    segment.x * gridSize, 
+                    segment.y * gridSize, 
+                    gridSize - 2, 
+                    gridSize - 2
+                );
+            });
+        }
+
+        function drawApple() {
+            ctx.drawImage(
+                appleImg, 
+                apple.x * gridSize, 
+                apple.y * gridSize, 
+                gridSize, 
+                gridSize
+            );
+        }
+
+        function moveSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+
+            if (head.x === apple.x && head.y === apple.y) {
+                score++;
+                apple = getRandomApple();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+            if (
+                head.x < 0 || head.x >= tileCount ||
+                head.y < 0 || head.y >= tileCount ||
+                snake.slice(1).some(segment => 
+                    segment.x === head.x && segment.y === head.y)
+            ) {
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            snake = [
+                {x: 10, y: 10},
+                {x: 9, y: 10},
+                {x: 8, y: 10}
+            ];
+            dx = 1;
+            dy = 0;
+            apple = getRandomApple();
+            score = 0;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': if (dy === 0) { dx = 0; dy = -1; } break;
+                case 'ArrowDown': if (dy === 0) { dx = 0; dy = 1; } break;
+                case 'ArrowLeft': if (dx === 0) { dx = -1; dy = 0; } break;
+                case 'ArrowRight': if (dx === 0) { dx = 1; dy = 0; } break;
+            }
+        });
+
+        drawGame();
+    </script>
+</body>
+</html>
